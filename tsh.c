@@ -55,7 +55,7 @@ struct job_t jobs[MAXJOBS]; /* The job list */
 /* Function prototypes */
 
 /* Here are the functions that you will implement */
-void eval(char *cmdline, char **argv);
+void eval(char *cmdline);
 int builtin_cmd(char **argv);
 void do_bgfg(char **argv, int stateNum);
 void waitfg(pid_t pid);
@@ -97,10 +97,9 @@ int main(int argc, char **argv)
     /* Redirect stderr to stdout (so that driver will get all output
      * on the pipe connected to stdout) */
     dup2(1, 2);
-
     /* Parse the command line */
     while ((c = getopt(argc, argv, "hvp")) != EOF) {
-        switch (c) {
+      switch (c) {
         case 'h':             /* print help message */
             usage();
 	    break;
@@ -116,7 +115,7 @@ int main(int argc, char **argv)
     }
 
     /* Install the signal handlers */
-
+    
     /* These are the ones you will need to implement */
     Signal(SIGINT,  sigint_handler);   /* ctrl-c */
     Signal(SIGTSTP, sigtstp_handler);  /* ctrl-z */
@@ -141,11 +140,9 @@ int main(int argc, char **argv)
 	if (feof(stdin)) { /* End of file (ctrl-d) */
             fflush(stdout);
 	    exit(0);
-	printf("while loop");
         }
-
 	/* Evaluate the command line */
-	eval(cmdline, argv);
+	eval(cmdline);
 	fflush(stdout);
 	fflush(stdout);
     } 
@@ -164,12 +161,33 @@ int main(int argc, char **argv)
  * background children don't receive SIGINT (SIGTSTP) from the kernel
  * when we type ctrl-c (ctrl-z) at the keyboard.  
 */
-void eval(char *cmdline, char **argv) 
+void eval(char *cmdline) 
 {
-  printf("in eval\n");
-  parseline(cmdline, argv);
+//  printf("in eval\n");i
+  char *argv[MAXARGS];
+  char buf[MAXLINE];
+  int bg;
+  
+  strcpy(buf, cmdline);
+  bg = parseline(buf, argv);
   if(builtin_cmd(argv)==0){
-    //job?
+   //create a job
+   struct job_t *newJob;
+   //fork to child
+   if((newJob->pid = fork()) == 0){
+     if(execv(argv[1],argv) < 0){  //run job
+       exit(0);                    //exit if bad command
+     }
+   }
+    if(!bg){
+      int status;
+        if(waitpid(newJob->pid, &status, 0) < 0){
+	  unix_error("waitfg: waitpid error");
+        }
+      else{
+        printf("%d %s", newJob->pid, cmdline);
+      }
+    } 
   }
   
   return;
@@ -238,25 +256,25 @@ int parseline(const char *cmdline, char **argv)
  */
 int builtin_cmd(char **argv) 
 {
-  printf("%s\n", *argv);
+  //printf("%s\n", *argv);
   if(strcmp("quit", *argv)){
-    printf("tsh quit\n");
+    //printf("tsh quit\n");
     exit(0);
   }
   else if(strcmp("fg", *argv)){
     //fg
-    printf("fg");
+    //printf("fg");
   }
   else if(strcmp("bg", *argv)){
     //bg
-    printf("bg");
+    //printf("bg");
   }
   else if(strcmp("jobs", *argv)){
     //jobs
-    printf("jobs");
+    //printf("jobs");
   }
   else{
-    printf("not built in cmd");
+    //printf("not built in cmd");
     return 0;     /* not a builtin command */
   }
 }
