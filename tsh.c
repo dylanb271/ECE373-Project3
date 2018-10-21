@@ -55,9 +55,9 @@ struct job_t jobs[MAXJOBS]; /* The job list */
 /* Function prototypes */
 
 /* Here are the functions that you will implement */
-void eval(char *cmdline);
+void eval(char *cmdline, char **argv);
 int builtin_cmd(char **argv);
-void do_bgfg(char **argv);
+void do_bgfg(char **argv, int stateNum);
 void waitfg(pid_t pid);
 
 void sigchld_handler(int sig);
@@ -139,12 +139,13 @@ int main(int argc, char **argv)
 	if ((fgets(cmdline, MAXLINE, stdin) == NULL) && ferror(stdin))
 	    app_error("fgets error");
 	if (feof(stdin)) { /* End of file (ctrl-d) */
-	    fflush(stdout);
+            fflush(stdout);
 	    exit(0);
-	}
+	printf("while loop");
+        }
 
 	/* Evaluate the command line */
-	eval(cmdline);
+	eval(cmdline, argv);
 	fflush(stdout);
 	fflush(stdout);
     } 
@@ -163,12 +164,14 @@ int main(int argc, char **argv)
  * background children don't receive SIGINT (SIGTSTP) from the kernel
  * when we type ctrl-c (ctrl-z) at the keyboard.  
 */
-void eval(char *cmdline) 
+void eval(char *cmdline, char **argv) 
 {
+  printf("in eval\n");
   parseline(cmdline, argv);
   if(builtin_cmd(argv)==0){
-    if(cmdline == EOF) return;
+    //job?
   }
+  
   return;
 }
 
@@ -235,25 +238,26 @@ int parseline(const char *cmdline, char **argv)
  */
 int builtin_cmd(char **argv) 
 {
-  switch(argv){
-    case quit:
-    //quit
-    break;
-  
-    case fg:
+  printf("%s\n", *argv);
+  if(strcmp("quit", *argv)){
+    printf("tsh quit\n");
+    exit(0);
+  }
+  else if(strcmp("fg", *argv)){
     //fg
-    break;
-  
-    case bg:
+    printf("fg");
+  }
+  else if(strcmp("bg", *argv)){
     //bg
-    break;
-
-    case jobs:
+    printf("bg");
+  }
+  else if(strcmp("jobs", *argv)){
     //jobs
-    break;
-
-    default:
-      return 0;     /* not a builtin command */
+    printf("jobs");
+  }
+  else{
+    printf("not built in cmd");
+    return 0;     /* not a builtin command */
   }
 }
 
