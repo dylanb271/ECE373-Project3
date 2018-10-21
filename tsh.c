@@ -1,7 +1,7 @@
 /* 
  * tsh - A tiny shell program with job control
  * 
- * <Put your name and login ID here>
+ * Dylan Banh dbanh@umass.edu 30426205
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -165,12 +165,16 @@ int main(int argc, char **argv)
 */
 void eval(char *cmdline) 
 {
-    return;
+  parseline(cmdline, argv);
+  if(builtin_cmd(argv)==0){
+    if(cmdline == EOF) return;
+  }
+  return;
 }
 
 /* 
  * parseline - Parse the command line and build the argv array.
- * 
+ *	 
  * Characters enclosed in single quotes are treated as a single
  * argument.  Return true if the user has requested a BG job, false if
  * the user has requested a FG job.  
@@ -231,14 +235,40 @@ int parseline(const char *cmdline, char **argv)
  */
 int builtin_cmd(char **argv) 
 {
-    return 0;     /* not a builtin command */
+  switch(argv){
+    case quit:
+    //quit
+    break;
+  
+    case fg:
+    //fg
+    break;
+  
+    case bg:
+    //bg
+    break;
+
+    case jobs:
+    //jobs
+    break;
+
+    default:
+      return 0;     /* not a builtin command */
+  }
 }
 
 /* 
  * do_bgfg - Execute the builtin bg and fg commands
  */
-void do_bgfg(char **argv) 
+void do_bgfg(char **argv, int stateNum) 
 {
+  //take in job pid or jid
+
+  //find state of job
+
+  //determine outcome state
+  //bg
+  //restarts job by sending SIGCONT and runs in bg or fg
     return;
 }
 
