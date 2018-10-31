@@ -90,6 +90,7 @@ handler_t *Signal(int signum, handler_t *handler);
  */
 int main(int argc, char **argv) 
 {
+//printf("main\n");
     char c;
     char cmdline[MAXLINE];
     int emit_prompt = 1; /* emit prompt (default) */
@@ -129,7 +130,7 @@ int main(int argc, char **argv)
 
     /* Execute the shell's read/eval loop */
     while (1) {
-
+//printf("eval loop\n");
 	/* Read command line */
 	if (emit_prompt) {
 	    printf("%s", prompt);
@@ -138,15 +139,17 @@ int main(int argc, char **argv)
 	if ((fgets(cmdline, MAXLINE, stdin) == NULL) && ferror(stdin))
 	    app_error("fgets error");
 	if (feof(stdin)) { /* End of file (ctrl-d) */
+//printf("eof quit\n");
             fflush(stdout);
 	    exit(0);
         }
 	/* Evaluate the command line */
+//printf("evaling\n");
 	eval(cmdline);
 	fflush(stdout);
 	fflush(stdout);
     } 
-
+//printf("last exit\n");
     exit(0); /* control never reaches here */
 }
   
@@ -163,19 +166,46 @@ int main(int argc, char **argv)
 */
 void eval(char *cmdline) 
 {
-//  printf("in eval\n");i
+ // printf("in eval\n");
   char *argv[MAXARGS];
   char buf[MAXLINE];
   int bg;
-  
+  pid_t pid;
+
   strcpy(buf, cmdline);
   bg = parseline(buf, argv);
+  printf("%s\n", *argv);
+  printf("%s\n", buf);
+  if(argv[0] == NULL) return;	//return if empty line
+  
   if(builtin_cmd(argv)==0){
+    if((pid = fork()) == 0){ //child
+      if(execve(argv[0], argv, environ) < 0){
+	printf("%s: Command not found.\n", argv[0]);
+	exit(0);
+      }
+    }
+    if(!bg){
+      int status;
+      if(waitpid(pid,&status,0) < 0) unix_error("waitfg: waitpid error");
+    }
+    else{
+      printf("%d %s", pid, cmdline);
+    }
+  }  
+  return;
+/*
    //create a job
    struct job_t *newJob;
+   addjob(jobs, 0, FG, argv);
    //fork to child
-   if((newJob->pid = fork()) == 0){
+   newJob->pid = fork();
+   printf("%d\n", newJob->pid); 
+ 
+   if((newJob->pid) == 0){
+printf("child");
      if(execv(argv[1],argv) < 0){  //run job
+printf("bad execv?");
        exit(0);                    //exit if bad command
      }
    }
@@ -190,7 +220,7 @@ void eval(char *cmdline)
     } 
   }
   
-  return;
+  return;*/
 }
 
 /* 
@@ -256,27 +286,29 @@ int parseline(const char *cmdline, char **argv)
  */
 int builtin_cmd(char **argv) 
 {
-  //printf("%s\n", *argv);
-  if(strcmp("quit", *argv)){
-    //printf("tsh quit\n");
+  printf("builtin_cmd: %s\n", *argv);
+  if(!strcmp("quit", argv[0])==0){
+    printf("tsh quit\n");
     exit(0);
   }
-  else if(strcmp("fg", *argv)){
+  else if(strcmp("fg", *argv)==0){
     //fg
-    //printf("fg");
+    printf("fg\n");
   }
-  else if(strcmp("bg", *argv)){
+  else if(strcmp("bg", *argv)==0){
     //bg
-    //printf("bg");
+    printf("bg\n");
   }
-  else if(strcmp("jobs", *argv)){
+  else if(strcmp("jobs", *argv)==0){
     //jobs
-    //printf("jobs");
+    printf("jobs\n");
   }
   else{
-    //printf("not built in cmd");
+    printf("not built in cmd");
     return 0;     /* not a builtin command */
   }
+  printf("builtin_cmd returning 1\n");
+  return 1;
 }
 
 /* 
